@@ -1,73 +1,68 @@
-def get_valid_input():
-    """Handles prompt, validates input, returns valid int, None (invalid), or 'quit'."""
-    user_input = input("Enter delivery stock quantity (or 'quit' to exit): ").strip()
+INVENTORY_FILE = "inventory.txt"
 
-    if user_input.lower() == 'quit':
-        return 'quit'
-
+def load_inventory():
+    orders = []
     try:
-        val = int(user_input)
-        if val < 0:
-            print("Error: Quantity cannot be negative.")
-            return None
-        return val
-    except ValueError:
-        print("Error: Please enter a valid whole number or 'quit'.")
-        return None
+        with open(INVENTORY_FILE, "r") as file:
+            for line in file:
+                line = line.strip()
+                if line:
+                    orders.append(line)
+    except FileNotFoundError:
+        pass
+    return orders
 
+def save_inventory(orders):
+    with open(INVENTORY_FILE, "w") as file:
+        for order in orders:
+            file.write(f"{order}\n")
 
-def process_delivery(current_total, new_value):
-    """Calculates and returns the new total."""
-    return current_total + new_value
-
-
-def calculate_tax(amount):
-    """Calculates and returns 10% tax for a specific delivery amount."""
-    return amount * 0.10
-
-
-def generate_report(total_units, failed_attempts, total_deliveries, max_capacity, total_tax_collected):
-    """Prints the final summary report."""
-    print("\n==================================")
-    print("      INVENTORY AUDIT REPORT      ")
-    print("==================================")
-    print(f"Total Deliveries Processed : {total_deliveries}")
-    print(f"Total Inventory Units     : {total_units} / {max_capacity}")
-    print(f"Failed/Rejected Entries   : {failed_attempts}")
-    print(f"Total Tax Collected       : ${total_tax_collected:.2f}")
-    print("==================================")
-
+def display_orders(orders):
+    print("\nCurrent Orders:")
+    if not orders:
+        print("No orders found.")
+    else:
+        for order in orders:
+            print(order)
 
 def main():
-    # Local variables & configuration inside main scope
-    max_capacity = 500
-    total_units = 0
-    total_deliveries = 0
-    failed_attempts = 0
-    total_tax_collected = 0
+    orders = load_inventory()
+    display_orders(orders)
+    print()
+
+    next_id = 1001 + len(orders)  # Start IDs from 1001 and increment for each order
 
     while True:
-        entry = get_valid_input()
-
-        if entry == 'quit':
+        product_name = input("Enter product name (or type 'quit' to finish): ").strip().lower()
+        if product_name == 'quit':
             break
 
-        if entry is None:
-            failed_attempts += 1
-        elif total_units + entry > max_capacity:
-            # Rejects entry if it exceeds local max_capacity
-            print(f"Error: Delivery of {entry} units would exceed max capacity ({max_capacity}). Current total: {total_units}.")
-            failed_attempts += 1
-        else:
-            total_units = process_delivery(total_units, entry)
-            tax_amount = calculate_tax(entry)
-            total_deliveries += 1
-            total_tax_collected += tax_amount
-            print(f"-> Logged delivery: {entry} units | Tax for delivery: ${tax_amount:.2f}")
+        quantity_input = input("Enter quantity for the product: ").strip()
+        if quantity_input.lower() == 'quit':
+            break
 
-    # Pass max_capacity into report generator
-    generate_report(total_units, failed_attempts, total_deliveries, max_capacity, total_tax_collected)
+        try:
+            quantity = int(quantity_input)
+            if quantity <= 0:
+                print("\nQuantity cannot be negative. Please enter a valid quantity.")
+                continue
+            if quantity > 500:
+                print("\nQuantity cannot exceed 500. Please enter a valid quantity.")
+                continue
+        except ValueError:
+            print("\nPlease enter a valid number for quantity.")
+            continue
 
+        new_order = f"Order ID: {next_id}, Product: {product_name}, Quantity: {quantity}"
+        orders.append(new_order)
+        next_id += 1
+
+        print(f"New Order Added:")
+        print(new_order)
+
+        save_inventory(orders)
+        print("Order successfully saved to orders.txt\n")
 
 if __name__ == "__main__":
     main()
+
