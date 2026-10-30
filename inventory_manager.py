@@ -9,29 +9,75 @@ INVENTORY_FILE = os.environ.get("INVENTORY_FILE", "inventory.json")
 
 # ------------------------------------------------------------ file handling
 def load_inventory(inventory):
-    """Fill the given Inventory from the JSON file, if it exists."""
+    """Return True if loading succeeds or no file exists."""
     filename = os.path.basename(INVENTORY_FILE)
-    if not os.path.exists(INVENTORY_FILE):
-        print(f"{filename} not found. Starting with an empty inventory.")
-        return
 
-    print(f"{filename} found.")
     try:
         with open(INVENTORY_FILE, "r") as f:
             records = json.load(f)
+
+        if not isinstance(records, list):
+            raise ValueError("Inventory data must be a list.")
+
+        temporary_inventory = Inventory()
+
         for record in records:
-            inventory.add_product(Product.from_dict(record))
-        print("Inventory loaded successfully.")
-    except (json.JSONDecodeError, OSError, KeyError, TypeError, ValueError):
-        print("Could not read the file. Starting with an empty inventory.")
+            if not isinstance(record, dict):
+                raise ValueError("Each product must be a dictionary.")
+
+            product = Product.from_dict(record)
+
+            if not isinstance(product.product_id, str):
+                raise ValueError("Product ID must be text.")
+
+            if not product.product_id.strip():
+                raise ValueError("Product ID cannot be empty.")
+
+            if not temporary_inventory.add_product(product):
+                raise ValueError(
+                    f"Duplicate product ID: {product.product_id}"
+                )
+
+    except FileNotFoundError:
+        print(f"{filename} not found. Starting with an empty inventory.")
+        return True
+
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        print(f"Could not load {filename}: {error}")
+        return False
+
+    # This runs only after all records have passed the checks.
+    for product in temporary_inventory.get_products():
+        inventory.add_product(product)
+
+    print("Inventory loaded successfully.")
+    return True
 
 
 def save_inventory(inventory):
-    """Write every product in the Inventory to the JSON file."""
-    records = [product.to_dict() for product in inventory.get_products()]
-    with open(INVENTORY_FILE, "w") as f:
-        json.dump(records, f, indent=4)
-    print(f"Inventory saved successfully to {os.path.basename(INVENTORY_FILE)}.")
+    """Return True if the inventory is saved successfully."""
+    records = [
+        product.to_dict()
+        for product in inventory.get_products()
+    ]
+
+    temporary_file = INVENTORY_FILE + ".tmp"
+
+    try:
+        with open(temporary_file, "w") as f:
+            json.dump(records, f, indent=4)
+
+        os.replace(temporary_file, INVENTORY_FILE)
+
+    except OSError as error:
+        print(f"Could not save inventory: {error}")
+        return False
+
+    print(
+        f"Inventory saved successfully to "
+        f"{os.path.basename(INVENTORY_FILE)}."
+    )
+    return True
 
 
 # --------------------------------------------------------------- menu actions
@@ -46,6 +92,10 @@ def add_product(inventory):
         return
 
     name = input("Product Name: ").strip()
+    if not name:
+        print("Product name cannot be empty.")
+        return
+    
     try:
         price = float(input("Price: "))
         stock = int(input("Stock Quantity: "))
@@ -114,7 +164,10 @@ def main():
     print("=" * 40)
 
     inventory = Inventory()
-    load_inventory(inventory)
+
+    if not load_inventory(inventory):
+        print("Please fix the inventory file and restart the program.")
+        return
 
     while True:
         show_menu()
@@ -136,10 +189,11 @@ def main():
             save_inventory(inventory)
         elif choice == "6":
             print("Saving inventory before exit...")
-            save_inventory(inventory)
-            print("Thank you for using Inventory Management System.")
-            print("Program terminated.")
-            break
+            if save_inventory(inventory):
+                print("Thank you for using Inventory Management System.")
+                print("Program terminated.")
+                break
+            print("Exit cancelled because saving failed.")
         else:
             print("Invalid option. Please choose 1-6.")
 
