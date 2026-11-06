@@ -1,4 +1,11 @@
-venv/
+# Python cache files
+__pycache__/
+*.py[cod]
+# Virtual environments
 .venv/
-env/
-ENV/
+venv/
+# Local environment variables
+.env
+# IDE settings
+.vscode/
+.idea/
