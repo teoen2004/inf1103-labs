@@ -1,4 +1,6 @@
-class Product:
+from abc import ABC, abstractmethod
+
+class Product(ABC):
     """Represents and manages ONE product (SRP: one product, its data and its state)."""
 
     def __init__(self, product_id, name, price, stock):
@@ -64,7 +66,10 @@ class Product:
     def from_dict(cls, data):
         return cls(data["id"], data["name"], data["price"], data["stock"])
 
-
+    @abstractmethod
+    def get_fulfilment_info(self):
+        """Return a string describing how this product is fulfilled (e.g., shipped, downloaded)."""
+        pass
 
 class PhysicalProduct(Product):
     def __init__(self, product_id, name, price, stock, weight):
