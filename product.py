@@ -63,3 +63,24 @@ class Product:
     @classmethod
     def from_dict(cls, data):
         return cls(data["id"], data["name"], data["price"], data["stock"])
+
+
+
+class PhysicalProduct(Product):
+    def __init__(self, product_id, name, price, stock, weight):
+        super().__init__(product_id, name, price, stock)
+        self.__weight = weight
+
+    @property
+    def weight(self):
+        return self.__weight
+
+
+class DigitalProduct(Product):
+    def __init__(self, product_id, name, price, stock, download_size):
+        super().__init__(product_id, name, price, stock)
+        self.__file_size = download_size
+
+    @property
+    def file_size(self):
+        return self.__file_size
