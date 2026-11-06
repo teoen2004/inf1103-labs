@@ -82,6 +82,10 @@ class CanBeShipped(ABC):
 class PhysicalProduct(Product, CanBeShipped):
     def __init__(self, product_id, name, price, stock, weight):
         super().__init__(product_id, name, price, stock)
+
+        if weight < 0:
+            raise ValueError("Weight cannot be negative.")
+        
         self.__weight = weight
 
         super().display_information()
