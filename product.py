@@ -93,6 +93,12 @@ class PhysicalProduct(Product, CanBeShipped):
     def calculate_shipping_cost(self):
         return self.__weight * 2
 
+    def to_dict(self):
+        data = super().to_dict()
+        data["type"] = "physical"
+        data["weight"] = self.__weight
+        return data
+
     @property
     def weight(self):
         return self.__weight
@@ -102,14 +108,20 @@ class PhysicalProduct(Product, CanBeShipped):
 class DigitalProduct(Product):
     def __init__(self, product_id, name, price, stock, download_size):
         super().__init__(product_id, name, price, stock)
-        self.__file_size = download_size
+        self.__download_size = download_size
 
         super().display_information()
-        print(f"File Size: {self.__file_size} MB")
+        print(f"File Size: {self.__download_size} MB")
 
     def get_fulfilment_info(self):
         return "This product is delivered digitally."
 
+    def to_dict(self):
+        data = super().to_dict()
+        data["type"] = "digital"
+        data["download_size"] = self.__download_size
+        return data
+    
     @property
-    def file_size(self):
-        return self.__file_size
+    def download_size(self):
+        return self.__download_size

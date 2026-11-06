@@ -1,7 +1,7 @@
 import json
 import os
 
-from product import Product
+from product import Product, PhysicalProduct, DigitalProduct
 from inventory import Inventory
 
 INVENTORY_FILE = os.environ.get("INVENTORY_FILE", "inventory.json")
@@ -25,7 +25,14 @@ def load_inventory(inventory):
             if not isinstance(record, dict):
                 raise ValueError("Each product must be a dictionary.")
 
-            product = Product.from_dict(record)
+            product = record.get("type")
+
+            if product == "physical":
+                product = PhysicalProduct.from_dict(record)
+            elif product == "digital":
+                product = DigitalProduct.from_dict(record)
+            else:
+                raise ValueError(f"Unknown product type: {product}")
 
             if not isinstance(product.product_id, str):
                 raise ValueError("Product ID must be text.")
@@ -83,15 +90,27 @@ def save_inventory(inventory):
 # --------------------------------------------------------------- menu actions
 def add_product(inventory):
     print("\nAdd New Product")
+    print("1. Physical Product")
+    print("2. Digital Product")
+
+    product_type = input("Select product type (1 or 2): ").strip()
+    
+    if product_type not in ("1", "2"):
+        print("Invalid product type.")
+        return
+
     product_id = input("Product ID: ").strip().upper()
+    
     if not product_id:
         print("Product ID cannot be empty.")
         return
+    
     if inventory.search_product(product_id):
         print("A product with that ID already exists.")
         return
 
     name = input("Product Name: ").strip()
+
     if not name:
         print("Product name cannot be empty.")
         return
@@ -99,14 +118,16 @@ def add_product(inventory):
     try:
         price = float(input("Price: "))
         stock = int(input("Stock Quantity: "))
-    except ValueError:
-        print("Invalid number entered. Product not added.")
-        return
 
-    try:
-        product = Product(product_id, name, price, stock)
-    except ValueError:
-        print("Price and stock cannot be negative. Product not added.")
+        if product_type == "1":
+            weight = float(input("Weight (kg): "))
+            product = PhysicalProduct(product_id, name, price, stock, weight)
+        else:
+            download_size = float(input("Download Size (MB): "))
+            product = DigitalProduct(product_id, name, price, stock, download_size)
+      
+    except ValueError as error:
+        print(f"Invalid product information. {error}")
         return
 
     inventory.add_product(product)
