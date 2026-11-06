@@ -71,6 +71,7 @@ class Product(ABC):
         """Return a string describing how this product is fulfilled (e.g., shipped, downloaded)."""
         pass
 
+
 class PhysicalProduct(Product):
     def __init__(self, product_id, name, price, stock, weight):
         super().__init__(product_id, name, price, stock)
@@ -79,9 +80,13 @@ class PhysicalProduct(Product):
         super().display_information()
         print(f"Weight: {self.__weight} kg")
 
+    def get_fulfilment_info(self):
+        return "This product requires physical shipping."
+
     @property
     def weight(self):
         return self.__weight
+
 
 
 class DigitalProduct(Product):
@@ -91,6 +96,9 @@ class DigitalProduct(Product):
 
         super().display_information()
         print(f"File Size: {self.__file_size} MB")
+
+    def get_fulfilment_info(self):
+        return "This product is delivered digitally."
 
     @property
     def file_size(self):
