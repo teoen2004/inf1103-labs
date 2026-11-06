@@ -71,6 +71,9 @@ class PhysicalProduct(Product):
         super().__init__(product_id, name, price, stock)
         self.__weight = weight
 
+        super().display_information()
+        print(f"Weight: {self.__weight} kg")
+
     @property
     def weight(self):
         return self.__weight
@@ -80,6 +83,9 @@ class DigitalProduct(Product):
     def __init__(self, product_id, name, price, stock, download_size):
         super().__init__(product_id, name, price, stock)
         self.__file_size = download_size
+
+        super().display_information()
+        print(f"File Size: {self.__file_size} MB")
 
     @property
     def file_size(self):
