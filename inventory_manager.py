@@ -28,11 +28,23 @@ def load_inventory(inventory):
             product = record.get("type")
 
             if product == "physical":
-                product = PhysicalProduct.from_dict(record)
+                product = PhysicalProduct(
+                    record["id"],
+                    record["name"],
+                    record["price"],
+                    record["stock"],
+                    record["weight"]
+                )
             elif product == "digital":
-                product = DigitalProduct.from_dict(record)
+                product = DigitalProduct(
+                    record["id"],
+                    record["name"],
+                    record["price"],
+                    record["stock"],
+                    record["download_size"]
+                )
             else:
-                raise ValueError(f"Unknown product type: {product}")
+                raise ValueError(f"Unknown product type.")
 
             if not isinstance(product.product_id, str):
                 raise ValueError("Product ID must be text.")
