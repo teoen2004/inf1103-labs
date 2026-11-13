@@ -46,6 +46,14 @@ class Inventory:
             print(product)
         print("-" * 48)
 
+    def display_all_products(self) -> None:
+        """Ask every Product to display itself. Inventory never checks the subclass:
+        each object runs its own display_information()"""
+        if not self.__products:
+            print("Inventory is empty.")
+        for product in self.__products:
+            product.display_information()
+
     def get_products(self) -> list[Product]:
         """Return a copy of the product list (used by the file-saving code)."""
         return list(self.__products)

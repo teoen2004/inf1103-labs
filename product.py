@@ -97,8 +97,11 @@ class PhysicalProduct(Product, CanBeShipped):
 
         self.__weight: float = weight
 
+    def display_information(self) -> None:
+        """Show the shared Product details, then the physical-only details."""
         super().display_information()
-        print(f"Weight: {self.__weight} kg")
+        print(f"Type: Physical | Weight: {self.__weight} kg | "
+              f"Shipping: ${self.calculate_shipping_cost():.2f}")
 
     def get_fulfilment_info(self) -> str:
         return "This product requires physical shipping."
@@ -124,8 +127,10 @@ class DigitalProduct(Product):
         super().__init__(product_id, name, price, stock, supplier)
         self.__download_size: float = download_size
 
+    def display_information(self) -> None:
+        """Show the shared Product details, then the digital-only details."""
         super().display_information()
-        print(f"File Size: {self.__download_size} MB")
+        print(f"Type: Digital | File Size: {self.__download_size} MB")
 
     def get_fulfilment_info(self) -> str:
         return "This product is delivered digitally."
