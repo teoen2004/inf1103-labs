@@ -10,7 +10,7 @@ INVENTORY_FILE = os.environ.get("INVENTORY_FILE", "inventory.json")
 
 
 # ------------------------------------------------------------ file handling
-def build_supplier(data: dict | None, suppliers: dict[str, Supplier]) -> Supplier:
+def build_supplier(data: dict[str, str] | None, suppliers: dict[str, Supplier]) -> Supplier:
     """Return ONE shared Supplier object per supplier ID while loading."""
     if data is None:  # records saved before Lab 8 have no supplier
         data = {"id": "UNKNOWN", "name": "Unknown Supplier", "email": "N/A"}
@@ -20,7 +20,7 @@ def build_supplier(data: dict | None, suppliers: dict[str, Supplier]) -> Supplie
     return suppliers[data["id"]]
 
 
-def load_inventory(inventory):
+def load_inventory(inventory: Inventory) -> bool:
     """Return True if loading succeeds or no file exists."""
     filename = os.path.basename(INVENTORY_FILE)
 
@@ -83,7 +83,7 @@ def load_inventory(inventory):
     return True
 
 
-def save_inventory(inventory):
+def save_inventory(inventory: Inventory) -> bool:
     """Return True if the inventory is saved successfully."""
     records = [
         product.to_dict()
@@ -118,7 +118,7 @@ def find_supplier(inventory: Inventory, supplier_id: str) -> Supplier | None:
     return None
 
 
-def add_product(inventory):
+def add_product(inventory: Inventory) -> None:
     print("\nAdd New Product")
     print("1. Physical Product")
     print("2. Digital Product")
@@ -174,7 +174,7 @@ def add_product(inventory):
     print("Product added successfully!")
 
 
-def update_stock(inventory):
+def update_stock(inventory: Inventory) -> None:
     print("\nUpdate Stock")
     product = inventory.find_product(input("Enter Product ID: ").strip())
     if product is None:
@@ -198,7 +198,7 @@ def update_stock(inventory):
     print("Stock updated successfully!")
 
 
-def search_product(inventory):
+def search_product(inventory: Inventory) -> None:
     print("\nSearch Product")
     product = inventory.find_product(input("Enter Product ID: ").strip())
     if product is None:
@@ -207,7 +207,7 @@ def search_product(inventory):
     product.display_information()
 
 
-def show_menu():
+def show_menu() -> None:
     print("\n----------- MENU -----------")
     print("1. Display All Products")
     print("2. Add Product")
@@ -219,7 +219,7 @@ def show_menu():
 
 
 # ------------------------------------------------------------------- main
-def main():
+def main() -> None:
     print("=" * 40)
     print("INVENTORY MANAGEMENT SYSTEM")
     print("=" * 40)

@@ -10,8 +10,8 @@ class Product(ABC):
                  supplier: Supplier) -> None:
         self.__product_id: str = product_id
         self.__name: str = name
-        self.__price: float | None = None
-        self.__stock: int | None = None
+        self.__price: float = 0.0
+        self.__stock: int = 0
         self.__supplier: Supplier = supplier   # a reference, not a copy
         # Go through the same checks used elsewhere so a Product can never start invalid.
         self.__set_price(price)
@@ -68,7 +68,7 @@ class Product(ABC):
                 f"Supplier: {self.__supplier.name}")
 
     # ------------------------------------------- conversion for JSON storage
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         """Describe this product as a plain dict (the file code decides how to store it)."""
         return {"id": self.__product_id, "name": self.__name,
                 "price": self.__price, "stock": self.__stock,
@@ -106,8 +106,8 @@ class PhysicalProduct(Product, CanBeShipped):
     def calculate_shipping_cost(self) -> float:
         return self.__weight * 2
 
-    def to_dict(self) -> dict:
-        data = super().to_dict()
+    def to_dict(self) -> dict[str, object]:
+        data: dict[str, object] = super().to_dict()
         data["type"] = "physical"
         data["weight"] = self.__weight
         return data
@@ -130,8 +130,8 @@ class DigitalProduct(Product):
     def get_fulfilment_info(self) -> str:
         return "This product is delivered digitally."
 
-    def to_dict(self) -> dict:
-        data = super().to_dict()
+    def to_dict(self) -> dict[str, object]:
+        data: dict[str, object] = super().to_dict()
         data["type"] = "digital"
         data["download_size"] = self.__download_size
         return data

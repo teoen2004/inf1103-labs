@@ -33,7 +33,7 @@ class Supplier:
                 f"Email: {self.__contact_email}")
 
     # ------------------------------------------- conversion for JSON storage
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         """Describe this supplier as a plain dict (used when a Product is saved)."""
         return {"id": self.__supplier_id, "name": self.__name,
                 "email": self.__contact_email}
