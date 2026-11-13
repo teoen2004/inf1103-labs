@@ -32,4 +32,8 @@ class Supplier:
         return (f"Supplier ID: {self.__supplier_id} | Name: {self.__name} | "
                 f"Email: {self.__contact_email}")
 
-
+    # ------------------------------------------- conversion for JSON storage
+    def to_dict(self) -> dict:
+        """Describe this supplier as a plain dict (used when a Product is saved)."""
+        return {"id": self.__supplier_id, "name": self.__name,
+                "email": self.__contact_email}
