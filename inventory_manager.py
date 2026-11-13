@@ -135,7 +135,7 @@ def add_product(inventory):
         print("Product ID cannot be empty.")
         return
     
-    if inventory.search_product(product_id):
+    if inventory.find_product(product_id):
         print("A product with that ID already exists.")
         return
 
@@ -176,7 +176,7 @@ def add_product(inventory):
 
 def update_stock(inventory):
     print("\nUpdate Stock")
-    product = inventory.search_product(input("Enter Product ID: ").strip())
+    product = inventory.find_product(input("Enter Product ID: ").strip())
     if product is None:
         print("Product not found.")
         return
@@ -200,7 +200,7 @@ def update_stock(inventory):
 
 def search_product(inventory):
     print("\nSearch Product")
-    product = inventory.search_product(input("Enter Product ID: ").strip())
+    product = inventory.find_product(input("Enter Product ID: ").strip())
     if product is None:
         print("Product not found.")
         return
