@@ -3,11 +3,23 @@ import os
 
 from product import Product, PhysicalProduct, DigitalProduct
 from inventory import Inventory
+from supplier import Supplier
 
 INVENTORY_FILE = os.environ.get("INVENTORY_FILE", "inventory.json")
 
 
+
 # ------------------------------------------------------------ file handling
+def build_supplier(data: dict | None, suppliers: dict[str, Supplier]) -> Supplier:
+    """Return ONE shared Supplier object per supplier ID while loading."""
+    if data is None:  # records saved before Lab 8 have no supplier
+        data = {"id": "UNKNOWN", "name": "Unknown Supplier", "email": "N/A"}
+
+    if data["id"] not in suppliers:
+        suppliers[data["id"]] = Supplier(data["id"], data["name"], data["email"])
+    return suppliers[data["id"]]
+
+
 def load_inventory(inventory):
     """Return True if loading succeeds or no file exists."""
     filename = os.path.basename(INVENTORY_FILE)
@@ -20,27 +32,25 @@ def load_inventory(inventory):
             raise ValueError("Inventory data must be a list.")
 
         temporary_inventory = Inventory()
+        suppliers: dict[str, Supplier] = {}
 
         for record in records:
             if not isinstance(record, dict):
                 raise ValueError("Each product must be a dictionary.")
 
+            supplier = build_supplier(record.get("supplier"), suppliers)
             product = record.get("type")
 
             if product == "physical":
                 product = PhysicalProduct(
-                    record["id"],
-                    record["name"],
-                    record["price"],
-                    record["stock"],
+                    record["id"], record["name"], record["price"], record["stock"],
+                    supplier,
                     record["weight"]
                 )
             elif product == "digital":
                 product = DigitalProduct(
-                    record["id"],
-                    record["name"],
-                    record["price"],
-                    record["stock"],
+                    record["id"], record["name"], record["price"], record["stock"],
+                    supplier,
                     record["download_size"]
                 )
             else:
@@ -100,6 +110,14 @@ def save_inventory(inventory):
 
 
 # --------------------------------------------------------------- menu actions
+def find_supplier(inventory: Inventory, supplier_id: str) -> Supplier | None:
+    """Reuse a Supplier that is already linked to a product in the inventory."""
+    for product in inventory.get_products():
+        if product.supplier.supplier_id.lower() == supplier_id.lower():
+            return product.supplier
+    return None
+
+
 def add_product(inventory):
     print("\nAdd New Product")
     print("1. Physical Product")
@@ -126,6 +144,16 @@ def add_product(inventory):
     if not name:
         print("Product name cannot be empty.")
         return
+
+    supplier_id = input("Supplier ID: ").strip().upper()
+    supplier = find_supplier(inventory, supplier_id)
+
+    if supplier is None:
+        supplier_name = input("Supplier Name: ").strip()
+        supplier_email = input("Supplier Email: ").strip()
+        supplier = Supplier(supplier_id, supplier_name, supplier_email)
+    else:
+        print(f"Using existing supplier: {supplier.name}")
     
     try:
         price = float(input("Price: "))
@@ -133,10 +161,10 @@ def add_product(inventory):
 
         if product_type == "1":
             weight = float(input("Weight (kg): "))
-            product = PhysicalProduct(product_id, name, price, stock, weight)
+            product = PhysicalProduct(product_id, name, price, stock, supplier, weight)
         else:
             download_size = float(input("Download Size (MB): "))
-            product = DigitalProduct(product_id, name, price, stock, download_size)
+            product = DigitalProduct(product_id, name, price, stock, supplier, download_size)
       
     except ValueError as error:
         print(f"Invalid product information. {error}")

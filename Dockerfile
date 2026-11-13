@@ -5,6 +5,7 @@ WORKDIR /app
 COPY product.py .
 COPY inventory.py .
 COPY inventory_manager.py .
+COPY supplier.py .
 
 #Set the default script to run for the container
 CMD ["python", "inventory_manager.py"]
