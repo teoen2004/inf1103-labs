@@ -1,15 +1,90 @@
+import csv
 import json
 import os
 
-from product import Product, PhysicalProduct, DigitalProduct
 from inventory import Inventory
+from product_factory import ProductFactory
 from supplier import Supplier
 
 INVENTORY_FILE = os.environ.get("INVENTORY_FILE", "inventory.json")
 
 
+# ----------------------------------------------------------- input helpers
+def get_positive_float(prompt: str) -> float:
+    """Ask the user for a positive floating-point number until a valid one is entered."""
+    while True:
+        try:
+            value = float(input(prompt))
+            if value <= 0:
+                print("Please enter a number greater than zero.")
+                continue
+            return value
+        except ValueError:
+            print("Please enter a valid number, e.g. 12.50")
+
+
+def get_non_negative_int(prompt: str) -> int:
+    """Ask the user for a non-negative integer until a valid one is entered."""
+    while True:
+        try:
+            value = int(input(prompt))
+            if value < 0:
+                print("Please enter a whole number of 0 or more.")
+                continue
+            return value
+        except ValueError:
+            print("Please enter a valid whole number, e.g. 10")
+
+
+def get_non_negative_float(prompt: str) -> float:
+    """Ask the user for a non-negative floating-point number until a valid one is entered."""
+    while True:
+        try:
+            value = float(input(prompt))
+            if value < 0:
+                print("Please enter a number of 0 or more.")
+                continue
+            return value
+        except ValueError:
+            print("Please enter a valid number, e.g. 2.5")
+
 
 # ------------------------------------------------------------ file handling
+def load_products(path: str, inventory: Inventory, supplier: Supplier) -> None:
+    """Load products from a CSV file using ProductFactory and add valid rows to inventory."""
+    loaded = 0
+    try:
+        file = open(path, newline="", encoding="utf-8")
+    except FileNotFoundError:
+        print(f"Products file not found: {path}")
+    else:
+        with file:
+            reader = csv.reader(file)
+            next(reader, None)  # skip header row
+            for row_num, row in enumerate(reader, start=2):
+                try:
+                    if len(row) != 5:
+                        raise ValueError(f"Expected 5 columns, got {len(row)}")
+                    product_type, product_id, name, price_str, stock_str = row
+                    price = float(price_str)
+                    stock_quantity = int(stock_str)
+                    product = ProductFactory.create(
+                        product_type,
+                        product_id,
+                        name,
+                        price,
+                        stock_quantity,
+                        supplier,
+                    )
+                    if inventory.add_product(product):
+                        loaded += 1
+                    else:
+                        print(f"Row {row_num} skipped: Duplicate product ID '{product_id}'.")
+                except ValueError as error:
+                    print(f"Row {row_num} skipped: {error}")
+        print(f"{loaded} products loaded.")
+    finally:
+        print("Load attempt finished.")
 def build_supplier(data: dict[str, str] | None, suppliers: dict[str, Supplier]) -> Supplier:
     """Return ONE shared Supplier object per supplier ID while loading."""
     if data is None:  # records saved before Lab 8 have no supplier
@@ -39,22 +114,20 @@ def load_inventory(inventory: Inventory) -> bool:
                 raise ValueError("Each product must be a dictionary.")
 
             supplier = build_supplier(record.get("supplier"), suppliers)
-            product = record.get("type")
+            product_type = record.get("type")
+            if not isinstance(product_type, str):
+                raise ValueError("Unknown product type.")
 
-            if product == "physical":
-                product = PhysicalProduct(
-                    record["id"], record["name"], record["price"], record["stock"],
-                    supplier,
-                    record["weight"]
-                )
-            elif product == "digital":
-                product = DigitalProduct(
-                    record["id"], record["name"], record["price"], record["stock"],
-                    supplier,
-                    record["download_size"]
-                )
-            else:
-                raise ValueError(f"Unknown product type.")
+            product = ProductFactory.create(
+                product_type,
+                record["id"],
+                record["name"],
+                record["price"],
+                record["stock"],
+                supplier,
+                weight=record.get("weight", 0.0),
+                download_size=record.get("download_size", 0.0),
+            )
 
             if not isinstance(product.product_id, str):
                 raise ValueError("Product ID must be text.")
@@ -155,17 +228,26 @@ def add_product(inventory: Inventory) -> None:
     else:
         print(f"Using existing supplier: {supplier.name}")
     
-    try:
-        price = float(input("Price: "))
-        stock = int(input("Stock Quantity: "))
+    price = get_positive_float("Price: ")
+    stock = get_non_negative_int("Stock Quantity: ")
 
+    try:
         if product_type == "1":
-            weight = float(input("Weight (kg): "))
-            product = PhysicalProduct(product_id, name, price, stock, supplier, weight)
+            weight = get_non_negative_float("Weight (kg): ")
+            product = ProductFactory.create(
+                "physical", product_id, name, price, stock, supplier, weight=weight
+            )
         else:
-            download_size = float(input("Download Size (MB): "))
-            product = DigitalProduct(product_id, name, price, stock, supplier, download_size)
-      
+            download_size = get_non_negative_float("Download Size (MB): ")
+            product = ProductFactory.create(
+                "digital",
+                product_id,
+                name,
+                price,
+                stock,
+                supplier,
+                download_size=download_size,
+            )
     except ValueError as error:
         print(f"Invalid product information. {error}")
         return
@@ -207,6 +289,16 @@ def search_product(inventory: Inventory) -> None:
     product.display_information()
 
 
+def load_products_from_csv(inventory: Inventory) -> None:
+    print("\nLoad Products from CSV")
+    path = input("CSV file path (default products.csv): ").strip() or "products.csv"
+    supplier_id = input("Supplier ID (default S001): ").strip().upper() or "S001"
+    supplier = find_supplier(inventory, supplier_id)
+    if supplier is None:
+        supplier = Supplier(supplier_id, "Default Supplier", "supplier@example.com")
+    load_products(path, inventory, supplier)
+
+
 def show_menu() -> None:
     print("\n----------- MENU -----------")
     print("1. Display All Products")
@@ -214,7 +306,8 @@ def show_menu() -> None:
     print("3. Update Stock")
     print("4. Search Product")
     print("5. Save Inventory")
-    print("6. Exit")
+    print("6. Load Products from CSV")
+    print("7. Exit")
     print("----------------------------")
 
 
@@ -235,7 +328,7 @@ def main() -> None:
         try:
             choice = input("Enter option: ").strip()
         except EOFError:
-            choice = "6"
+            choice = "7"
 
         if choice == "1":
             inventory.display_all()
@@ -249,6 +342,8 @@ def main() -> None:
             print("Saving inventory...")
             save_inventory(inventory)
         elif choice == "6":
+            load_products_from_csv(inventory)
+        elif choice == "7":
             print("Saving inventory before exit...")
             if save_inventory(inventory):
                 print("Thank you for using Inventory Management System.")
@@ -256,7 +351,7 @@ def main() -> None:
                 break
             print("Exit cancelled because saving failed.")
         else:
-            print("Invalid option. Please choose 1-6.")
+            print("Invalid option. Please choose 1-7.")
 
 
 if __name__ == "__main__":
