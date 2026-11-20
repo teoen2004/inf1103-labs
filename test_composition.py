@@ -1,11 +1,11 @@
 from supplier import Supplier
-from product import PhysicalProduct, DigitalProduct
+from product_factory import ProductFactory
 from order import Order
 
 supplier = Supplier("S001", "Acme Supplies", "sales@acme.com")
-laptop = PhysicalProduct("P100", "Laptop", 1200.0, 10, supplier, 2.5)
-mouse = PhysicalProduct("P101", "Mouse", 25.0, 50, supplier, 0.1)
-ebook = DigitalProduct("D100", "Python eBook", 25.0, 100, supplier, 15.0)
+laptop = ProductFactory.create("physical", "P100", "Laptop", 1200.0, 10, supplier, weight=2.5)
+mouse = ProductFactory.create("physical", "P101", "Mouse", 25.0, 50, supplier, weight=0.1)
+ebook = ProductFactory.create("digital", "D100", "Python eBook", 25.0, 100, supplier, download_size=15.0)
 
 # 1. Create an Order.
 order1 = Order("O001")

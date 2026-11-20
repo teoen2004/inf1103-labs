@@ -1,11 +1,11 @@
 from supplier import Supplier
-from product import PhysicalProduct, DigitalProduct
+from product_factory import ProductFactory
 from inventory import Inventory
 
 supplier = Supplier("S001", "Acme Supplies", "sales@acme.com")
 
 # 1. Create a Product BEFORE any Inventory exists.
-laptop = PhysicalProduct("P100", "Laptop", 1200.0, 10, supplier, 2.5)
+laptop = ProductFactory.create("physical", "P100", "Laptop", 1200.0, 10, supplier, weight=2.5)
 
 inventory_a = Inventory()
 inventory_b = Inventory()
@@ -31,7 +31,7 @@ print("Inventory B holds the same laptop object:",
       inventory_b.find_product("P100") is laptop)
 
 # 5. Empty Inventory B and confirm the products still exist.
-ebook = DigitalProduct("D100", "Python eBook", 25.0, 100, supplier, 15.0)
+ebook = ProductFactory.create("digital", "D100", "Python eBook", 25.0, 100, supplier, download_size=15.0)
 inventory_b.add_product(ebook)
 
 for product in inventory_b.get_products():

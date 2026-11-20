@@ -1,5 +1,5 @@
 from supplier import Supplier
-from product import PhysicalProduct, DigitalProduct
+from product_factory import ProductFactory
 from inventory import Inventory
 
 # Section 7: Polymorphism through the common Product type.
@@ -9,10 +9,10 @@ from inventory import Inventory
 supplier = Supplier("S001", "Acme Supplies", "sales@acme.com")
 
 inventory = Inventory()
-inventory.add_product(PhysicalProduct("P300", "Office Chair", 150.0, 20, supplier, 12.0))
-inventory.add_product(DigitalProduct("D300", "Antivirus Licence", 49.9, 500, supplier, 250.0))
-inventory.add_product(PhysicalProduct("P301", "USB Keyboard", 35.0, 40, supplier, 0.8))
-inventory.add_product(DigitalProduct("D301", "Design Course", 89.0, 1000, supplier, 4096.0))
+inventory.add_product(ProductFactory.create("physical", "P300", "Office Chair", 150.0, 20, supplier, weight=12.0))
+inventory.add_product(ProductFactory.create("digital", "D300", "Antivirus Licence", 49.9, 500, supplier, download_size=250.0))
+inventory.add_product(ProductFactory.create("physical", "P301", "USB Keyboard", 35.0, 40, supplier, weight=0.8))
+inventory.add_product(ProductFactory.create("digital", "D301", "Design Course", 89.0, 1000, supplier, download_size=4096.0))
 
 print("=== One loop, every Product, no type checks ===\n")
 for product in inventory.get_products():

@@ -1,5 +1,6 @@
 from supplier import Supplier
-from product import Product, PhysicalProduct, DigitalProduct
+from product import Product
+from product_factory import ProductFactory
 from inventory import Inventory
 
 
@@ -10,8 +11,8 @@ def show_product_details(product: Product) -> None:
 
 
 supplier = Supplier("S001", "Acme Supplies", "sales@acme.com")
-laptop = PhysicalProduct("P200", "Laptop", 1200.0, 10, supplier, 2.5)
-ebook = DigitalProduct("D200", "Python eBook", 25.0, 100, supplier, 15.0)
+laptop = ProductFactory.create("physical", "P200", "Laptop", 1200.0, 10, supplier, weight=2.5)
+ebook = ProductFactory.create("digital", "D200", "Python eBook", 25.0, 100, supplier, download_size=15.0)
 
 # 6.2 (a) The same function accepts both subclasses unchanged.
 print("=== show_product_details() with a PhysicalProduct ===")
