@@ -1,3 +1,4 @@
+from discount import DiscountStrategy, NoDiscount
 from product import Product
 
 
@@ -5,7 +6,7 @@ class OrderLine:
 
     def __init__(self, product: Product, quantity: int) -> None:
         if quantity <= 0:
-            raise ValueError("Quantity must be at least 1.")
+            raise ValueError("Quantity must be greater than zero.")
         self.__product: Product = product
         self.__quantity: int = quantity
 
@@ -35,14 +36,27 @@ class Order:
     never passed in from outside and never moved to another Order.
     """
 
-    def __init__(self, order_id: str) -> None:
+    def __init__(
+        self, order_id: str, discount: DiscountStrategy | None = None
+    ) -> None:
         self.__order_id: str = order_id
         self.__order_lines: list[OrderLine] = []
+        self.__discount: DiscountStrategy = (
+            discount if discount is not None else NoDiscount()
+        )
 
     # ----------------------------------------------------- read-only access
     @property
     def order_id(self) -> str:
         return self.__order_id
+
+    @property
+    def discount(self) -> DiscountStrategy:
+        return self.__discount
+
+    def set_discount(self, discount: DiscountStrategy) -> None:
+        """Replace the active discount strategy for this order."""
+        self.__discount = discount
 
     def get_order_lines(self) -> list[OrderLine]:
         """Return a copy of the list, so outside code cannot add lines directly."""
@@ -68,8 +82,9 @@ class Order:
 
     # ---------------------------------------------------------- behaviour
     def calculate_total(self) -> float:
-        """Ask each OrderLine for its subtotal and add them up."""
-        return sum((line.calculate_subtotal() for line in self.__order_lines), 0.0)
+        """Sum OrderLine subtotals and apply the active DiscountStrategy."""
+        total = sum((line.calculate_subtotal() for line in self.__order_lines), 0.0)
+        return self.__discount.apply(total)
 
     def display_order(self) -> None:
         print(f"\nOrder {self.__order_id}")
