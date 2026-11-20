@@ -40,8 +40,8 @@ class Product(ABC):
 
     # ------------------------------------------------------ managing state
     def __set_price(self, price: float) -> None:
-        if price < 0:
-            raise ValueError("Price cannot be negative.")
+        if price <= 0:
+            raise ValueError("Price must be greater than zero.")
         self.__price = price
 
     def update_stock(self, quantity: int) -> None:
@@ -89,7 +89,7 @@ class CanBeShipped(ABC):
 
 class PhysicalProduct(Product, CanBeShipped):
     def __init__(self, product_id: str, name: str, price: float, stock: int,
-                 supplier: Supplier, weight: float) -> None:
+                 supplier: Supplier, weight: float = 0.0) -> None:
         super().__init__(product_id, name, price, stock, supplier)
 
         if weight < 0:
@@ -123,8 +123,10 @@ class PhysicalProduct(Product, CanBeShipped):
 
 class DigitalProduct(Product):
     def __init__(self, product_id: str, name: str, price: float, stock: int,
-                 supplier: Supplier, download_size: float) -> None:
+                 supplier: Supplier, download_size: float = 0.0) -> None:
         super().__init__(product_id, name, price, stock, supplier)
+        if download_size < 0:
+            raise ValueError("Download size cannot be negative.")
         self.__download_size: float = download_size
 
     def display_information(self) -> None:
